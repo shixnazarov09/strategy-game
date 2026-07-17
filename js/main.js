@@ -10,17 +10,22 @@ let ui;
  * Initialize the game
  */
 function initGame() {
-    // Create game state
-    gameState = new GameState();\n    gameState.playingAgainstAI = true;
-    gameState.aiPlayer = CONFIG.PLAYERS.PLAYER2;
+    try {
+        // Create game state
+        gameState = new GameState();
+        gameState.playingAgainstAI = true;
+        gameState.aiPlayer = CONFIG.PLAYERS.PLAYER2;
 
-    // Create UI
-    ui = new UI(gameState, 'gameBoard');
+        // Create UI
+        ui = new UI(gameState, 'gameBoard');
 
-    // Show setup modal
-    document.getElementById('setupModal').classList.remove('hidden');
+        // Show setup modal
+        document.getElementById('setupModal').classList.remove('hidden');
 
-    console.log('Game initialized. Ready to start.');
+        console.log('Game initialized. Ready to start.');
+    } catch (error) {
+        console.error('Error initializing game:', error);
+    }
 }
 
 /**
@@ -53,7 +58,7 @@ window.addEventListener('error', (event) => {
  * Keyboard shortcuts
  */
 document.addEventListener('keydown', (e) => {
-    if (gameState.gameState !== CONFIG.GAME_STATE.PLAYING) return;
+    if (!gameState || gameState.gameState !== CONFIG.GAME_STATE.PLAYING) return;
 
     switch (e.key.toLowerCase()) {
         case 'n':
@@ -74,11 +79,17 @@ document.addEventListener('keydown', (e) => {
             break;
         case 'escape':
             // Close any open modal
-            document.querySelectorAll('.modal').forEach(modal => {\n                modal.classList.add('hidden');
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.add('hidden');
             });
             break;
     }
 });
 
 // Initialize game when DOM is ready
-document.addEventListener('DOMContentLoaded', initGame);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initGame);
+} else {
+    // DOM is already loaded
+    initGame();
+}
