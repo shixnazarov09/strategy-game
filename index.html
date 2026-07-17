@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategy Game - Hidden Information Chess Variant</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- Header -->
+        <header class="game-header">
+            <h1>Strategy Game</h1>
+            <div class="header-controls">
+                <button id="settingsBtn" class="btn btn-secondary">⚙️ Settings</button>
+                <button id="historyBtn" class="btn btn-secondary">📋 History</button>
+            </div>
+        </header>
+
+        <!-- Main Game Area -->
+        <main class="game-area">
+            <!-- Left Sidebar: Captured Pieces -->
+            <aside class="sidebar sidebar-left">
+                <div class="captured-pieces">
+                    <h3>Captured Pieces</h3>
+                    <div id="capturedPlayer" class="captured-list">
+                        <h4>Your Captures</h4>
+                        <div id="capturedPlayerPieces" class="piece-list"></div>
+                    </div>
+                    <div id="capturedOpponent" class="captured-list">
+                        <h4>Opponent Captures</h4>
+                        <div id="capturedOpponentPieces" class="piece-list"></div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center: Board and Game Info -->
+            <div class="game-center">
+                <!-- Game Info Bar -->
+                <div class="game-info-bar">
+                    <div class="info-item">
+                        <span class="label">Turn:</span>
+                        <span id="turnIndicator" class="value">Player 1</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Status:</span>
+                        <span id="gameStatus" class="value">Game Started</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Moves:</span>
+                        <span id="moveCount" class="value">0</span>
+                    </div>
+                </div>
+
+                <!-- Canvas Board -->
+                <div class="board-container">
+                    <canvas id="gameBoard" width="800" height="800"></canvas>
+                </div>
+
+                <!-- Game Controls -->
+                <div class="game-controls">
+                    <button id="newGameBtn" class="btn btn-primary">🔄 New Game</button>
+                    <button id="undoBtn" class="btn btn-secondary">↶ Undo</button>
+                    <button id="resignBtn" class="btn btn-danger">🏳️ Resign</button>
+                </div>
+            </div>
+
+            <!-- Right Sidebar: Move History -->
+            <aside class="sidebar sidebar-right">
+                <div class="move-history">
+                    <h3>Move History</h3>
+                    <div id="moveHistoryList" class="history-list"></div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Modals -->
+        <!-- Setup Modal -->
+        <div id="setupModal" class="modal">
+            <div class="modal-content">
+                <h2>Game Setup</h2>
+                <p>Choose your preferred setup:</p>
+                <div class="setup-options">
+                    <button class="btn btn-primary" data-setup="random">Random Setup</button>
+                    <button class="btn btn-primary" data-setup="standard">Standard Positions</button>
+                    <button class="btn btn-primary" data-setup="custom">Custom Setup</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="modal hidden">
+            <div class="modal-content modal-lg">
+                <div class="modal-header">
+                    <h2>Settings</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="settings-group">
+                        <label for="difficultySelect">AI Difficulty:</label>
+                        <select id="difficultySelect">
+                            <option value="easy">Easy</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+                    <div class="settings-group">
+                        <label for="visionRadiusSlider">Vision Radius:</label>
+                        <input type="range" id="visionRadiusSlider" min="1" max="8" value="4">
+                        <span id="visionRadiusValue">4</span>
+                    </div>
+                    <div class="settings-group">
+                        <label for="animationToggle">
+                            <input type="checkbox" id="animationToggle" checked>
+                            Enable Animations
+                        </label>
+                    </div>
+                    <div class="settings-group">
+                        <label for="soundToggle">
+                            <input type="checkbox" id="soundToggle" checked>
+                            Enable Sound
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="closeSettingsBtn">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Move History Modal -->
+        <div id="historyModal" class="modal hidden">
+            <div class="modal-content modal-lg">
+                <div class="modal-header">
+                    <h2>Game History</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="fullHistoryList" class="full-history-list"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="closeHistoryBtn">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Modal -->
+        <div id="gameOverModal" class="modal hidden">
+            <div class="modal-content">
+                <h2 id="gameOverTitle">Game Over</h2>
+                <p id="gameOverMessage"></p>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="playAgainBtn">Play Again</button>
+                    <button class="btn btn-secondary" id="mainMenuBtn">Main Menu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/board.js"></script>
+    <script src="js/piece.js"></script>
+    <script src="js/pieces/pawn.js"></script>
+    <script src="js/pieces/knight.js"></script>
+    <script src="js/pieces/bishop.js"></script>
+    <script src="js/pieces/rook.js"></script>
+    <script src="js/pieces/queen.js"></script>
+    <script src="js/pieces/king.js"></script>
+    <script src="js/rules.js"></script>
+    <script src="js/visionSystem.js"></script>
+    <script src="js/renderer.js"></script>
+    <script src="js/ai.js"></script>
+    <script src="js/gameState.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
