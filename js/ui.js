@@ -31,13 +31,18 @@ class UI {
 
         // Settings modal
         document.getElementById('closeSettingsBtn').addEventListener('click', () => this.hideSettings());
-        document.getElementById('historyBtn').addEventListener('click', () => this.showHistory());
         document.getElementById('closeHistoryBtn').addEventListener('click', () => this.hideHistory());
 
-        // Setup modal
-        const setupButtons = document.querySelectorAll('.setup-options button');
+        // Setup modal buttons
+        const setupButtons = document.querySelectorAll('#setupModal .setup-options button');
         setupButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => this.handleSetupChoice(e));
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const setupType = e.target.getAttribute('data-setup');
+                console.log('Setup button clicked with type:', setupType);
+                this.startGameWithSetup(setupType);
+            });
         });
 
         // Settings changes
@@ -58,6 +63,10 @@ class UI {
                 e.target.closest('.modal').classList.add('hidden');
             });
         });
+
+        // Game over modal buttons
+        document.getElementById('playAgainBtn').addEventListener('click', () => this.handleNewGame());
+        document.getElementById('mainMenuBtn').addEventListener('click', () => this.handleNewGame());
     }
 
     /**
@@ -124,14 +133,23 @@ class UI {
     }
 
     /**
-     * Handle setup choice
+     * Start game with selected setup
      */
-    handleSetupChoice(e) {
-        const setupType = e.target.dataset.setup;
+    startGameWithSetup(setupType) {
+        if (!setupType) {
+            console.error('No setup type provided');
+            return;
+        }
+        
         this.gameState.initializeGame(setupType);
         document.getElementById('setupModal').classList.add('hidden');
         this.updateUI();
         this.render();
+        
+        // Trigger AI move if it's AI's turn
+        if (this.gameState.currentPlayer === this.gameState.aiPlayer) {
+            this.handleAITurn();
+        }
     }
 
     /**
@@ -139,6 +157,7 @@ class UI {
      */
     handleUndo() {
         // TODO: Implement move history
+        console.log('Undo not yet implemented');
     }
 
     /**
@@ -147,7 +166,7 @@ class UI {
     handleResign() {
         const opponent = this.gameState.currentPlayer === CONFIG.PLAYERS.PLAYER1 ? CONFIG.PLAYERS.PLAYER2 : CONFIG.PLAYERS.PLAYER1;
         this.gameState.endGame(opponent);
-        this.updateUI();
+        this.showGameOver(opponent);
         this.render();
     }
 
@@ -156,18 +175,37 @@ class UI {
      */
     async handleAITurn() {
         if (this.gameState.currentPlayer === this.gameState.aiPlayer && this.gameState.gameState === CONFIG.GAME_STATE.PLAYING) {
+            document.getElementById('gameStatus').textContent = 'AI Thinking...';
             await new Promise(resolve => setTimeout(resolve, 500)); // Delay for UX
             const move = await this.gameState.getAIMove();
             if (move) {
                 this.gameState.makeMove(move.piece, move.move.x, move.move.y);
                 this.updateUI();
                 this.render();
-                // Check if human player is AI's turn again
+
+                // Check for game over
+                if (this.gameState.gameState === CONFIG.GAME_STATE.GAME_OVER) {
+                    this.showGameOver(this.gameState.gameWinner);
+                    return;
+                }
+
+                // Check if opponent still needs to play
                 if (this.gameState.currentPlayer === this.gameState.aiPlayer) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
                     this.handleAITurn();
                 }
             }
         }
+    }
+
+    /**
+     * Show game over modal
+     */
+    showGameOver(winner) {
+        const winnerName = winner === CONFIG.PLAYERS.PLAYER1 ? 'Player 1 (You)' : 'Player 2 (AI)';
+        document.getElementById('gameOverTitle').textContent = 'Game Over!';
+        document.getElementById('gameOverMessage').textContent = `${winnerName} wins!`;
+        document.getElementById('gameOverModal').classList.remove('hidden');
     }
 
     /**
@@ -224,14 +262,18 @@ class UI {
      */
     showHistory() {
         const historyList = document.getElementById('fullHistoryList');
-        historyList.innerHTML = this.gameState.board.moveHistory
-            .map((move, index) => `
-                <div class="full-history-item">
-                    <div class="full-history-item-move">Move ${index + 1}: ${move.piece.type.toUpperCase()} to (${move.to.x}, ${move.to.y})</div>
-                    <div class="full-history-item-player">Player ${move.piece.owner + 1}</div>
-                </div>
-            `)
-            .join('');
+        if (this.gameState.board.moveHistory.length === 0) {
+            historyList.innerHTML = '<p style="padding: 1rem; text-align: center; color: #64748b;">No moves yet</p>';
+        } else {
+            historyList.innerHTML = this.gameState.board.moveHistory
+                .map((move, index) => `
+                    <div class="full-history-item">
+                        <div class="full-history-item-move">Move ${index + 1}: ${move.piece.type.toUpperCase()} to (${move.to.x}, ${move.to.y})</div>
+                        <div class="full-history-item-player">Player ${move.piece.owner + 1}</div>
+                    </div>
+                `)
+                .join('');
+        }
         document.getElementById('historyModal').classList.remove('hidden');
     }
 
